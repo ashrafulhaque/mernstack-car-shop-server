@@ -25,16 +25,26 @@ async function run() {
     await client.connect();
     const userListCollection = client.db("carShopDB").collection("userList");
 
-    app.post("/userList", async (req, res) => {
-      const user = req.body;
-      const insertedUser = await userListCollection.insertOne(user);
-      res.send(insertedUser);
+    app.get("/userList/:uid", async (req, res) => {
+      const id = req.params.uid;
+      console.log(id);
+      const query = { uid: id };
+      const result = await userListCollection.findOne(query);
+      // console.log(result);
+      res.send(result);
     });
 
     app.get("/userList", async (req, res) => {
       const users = await userListCollection.find().toArray();
       res.send(users);
     });
+
+    app.post("/userList", async (req, res) => {
+      const user = req.body;
+      const insertedUser = await userListCollection.insertOne(user);
+      res.send(insertedUser);
+    });
+
     // Ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Successfully connected to MongoDB!");
