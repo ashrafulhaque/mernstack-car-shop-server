@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -27,7 +27,6 @@ async function run() {
 
     app.get("/userList/:uid", async (req, res) => {
       const id = req.params.uid;
-      console.log(id);
       const query = { uid: id };
       const result = await userListCollection.findOne(query);
       // console.log(result);
@@ -43,6 +42,34 @@ async function run() {
       const user = req.body;
       const insertedUser = await userListCollection.insertOne(user);
       res.send(insertedUser);
+    });
+
+    app.put("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const user = req.body;
+      console.log(id, user);
+
+      const filter = { _id: new ObjectId(id) };
+      const option = { upsert: true };
+
+      // Update the document with all fields in the request body
+      const userUpdateData = {
+        $set: { ...user },
+      };
+
+      try {
+        const result = await userListCollection.updateOne(
+          filter,
+          userUpdateData,
+          option
+        );
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating user:", error);
+        res
+          .status(500)
+          .send({ error: "An error occurred while updating the user." });
+      }
     });
 
     // Ping to confirm a successful connection
