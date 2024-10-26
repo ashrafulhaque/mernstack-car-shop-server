@@ -29,7 +29,6 @@ async function run() {
       const id = req.params.uid;
       const query = { uid: id };
       const result = await userListCollection.findOne(query);
-      // console.log(result);
       res.send(result);
     });
 
@@ -47,12 +46,10 @@ async function run() {
     app.put("/user/:id", async (req, res) => {
       const id = req.params.id;
       const user = req.body;
-      console.log(id, user);
 
       const filter = { _id: new ObjectId(id) };
       const option = { upsert: true };
 
-      // Update the document with all fields in the request body
       const userUpdateData = {
         $set: { ...user },
       };
@@ -65,16 +62,11 @@ async function run() {
         );
         res.send(result);
       } catch (error) {
-        console.error("Error updating user:", error);
         res
           .status(500)
           .send({ error: "An error occurred while updating the user." });
       }
     });
-
-    // Ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Successfully connected to MongoDB!");
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
   }
