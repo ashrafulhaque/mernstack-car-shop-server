@@ -6,7 +6,11 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173", //My frontend URL
+  })
+);
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.q1o0o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -69,7 +73,7 @@ async function run() {
     // Collection for categories
     const categoryCollection = client.db("carShopDB").collection("categories");
 
-    // Get all categories
+    // Get all categories /products
     app.get("/categories", async (req, res) => {
       const categories = await categoryCollection.find().toArray();
       res.send(categories);
@@ -114,6 +118,64 @@ async function run() {
         res.send(result);
       } catch (error) {
         res.status(500).send({ error: "Error deleting category" });
+      }
+    });
+
+    // Collection for products
+    const productCollection = client.db("carShopDB").collection("products");
+
+    // Get all products
+    app.get("/products", async (req, res) => {
+      const products = await productCollection.find().toArray();
+      res.send(products);
+    });
+    // Get all products by category
+    app.get("/products/:category_id", async (req, res) => {
+      const id = req.params.category_id;
+      const query = { category_id: id };
+      const products = await productCollection.find(query).toArray();
+      res.send(products);
+    });
+
+    // Add new product
+    app.post("/products", async (req, res) => {
+      const product = req.body;
+      const result = await productCollection.insertOne(product);
+      res.send(result);
+    });
+
+    // Update product
+    app.put("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const product = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+
+      const updateProduct = {
+        $set: { ...product },
+      };
+
+      try {
+        const result = await productCollection.updateOne(
+          filter,
+          updateProduct,
+          options
+        );
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Error updating product" });
+      }
+    });
+
+    // Delete product
+    app.delete("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      try {
+        const result = await productCollection.deleteOne(filter);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Error deleting product" });
       }
     });
   } catch (error) {
