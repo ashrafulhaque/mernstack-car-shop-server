@@ -21,8 +21,6 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server (don't close the connection here)
-    await client.connect();
     const userListCollection = client.db("carShopDB").collection("userList");
 
     app.get("/userList/:uid", async (req, res) => {
@@ -65,6 +63,57 @@ async function run() {
         res
           .status(500)
           .send({ error: "An error occurred while updating the user." });
+      }
+    });
+
+    // Collection for categories
+    const categoryCollection = client.db("carShopDB").collection("categories");
+
+    // Get all categories
+    app.get("/categories", async (req, res) => {
+      const categories = await categoryCollection.find().toArray();
+      res.send(categories);
+    });
+
+    // Add new category
+    app.post("/categories", async (req, res) => {
+      const category = req.body;
+      const result = await categoryCollection.insertOne(category);
+      res.send(result);
+    });
+
+    // Update category
+    app.put("/categories/:id", async (req, res) => {
+      const id = req.params.id;
+      const category = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+
+      const updateCat = {
+        $set: { ...category },
+      };
+
+      try {
+        const result = await categoryCollection.updateOne(
+          filter,
+          updateCat,
+          options
+        );
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Error updating category" });
+      }
+    });
+
+    // Delete category
+    app.delete("/categories/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      try {
+        const result = await categoryCollection.deleteOne(filter);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Error deleting category" });
       }
     });
   } catch (error) {
