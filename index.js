@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173", //My frontend URL
+    origin: "https://mernstack-car-shop-client.vercel.app/", //My frontend URL
   })
 );
 app.use(express.json());
@@ -145,9 +145,10 @@ async function run() {
         res.status(500).json({ message: "Error fetching product" });
       }
     });
-    // Get all products by category
-    app.get("/products/:category_id", async (req, res) => {
-      const id = req.params.category_id;
+
+    // Fetch products by category_id
+    app.get("/products/category/:id", async (req, res) => {
+      const id = req.params.id;
       const query = { category_id: id };
       const products = await productCollection.find(query).toArray();
       res.send(products);
