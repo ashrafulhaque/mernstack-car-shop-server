@@ -131,10 +131,19 @@ async function run() {
     });
     // Get a product by id
     app.get("/products/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await userListCollection.findOne(query);
-      res.send(result);
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await productCollection.findOne(query);
+
+        if (!result) {
+          return res.status(404).json({ message: "Product not found" });
+        }
+
+        res.json(result);
+      } catch (error) {
+        res.status(500).json({ message: "Error fetching product" });
+      }
     });
     // Get all products by category
     app.get("/products/:category_id", async (req, res) => {
@@ -184,6 +193,20 @@ async function run() {
       } catch (error) {
         res.status(500).send({ error: "Error deleting product" });
       }
+    });
+
+    // collection for product cart
+    const cartCollection = client.db("carShopDB").collection("productcart");
+    // Get all products from productcart
+    app.get("/productcart", async (req, res) => {
+      const products = await cartCollection.find().toArray();
+      res.send(products);
+    });
+    // Add new product
+    app.post("/productcart", async (req, res) => {
+      const product = req.body;
+      const result = await cartCollection.insertOne(product);
+      res.send(result);
     });
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
